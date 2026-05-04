@@ -1,0 +1,50 @@
+name: YouTube download and release
+
+on:
+  workflow_dispatch:
+    inputs:
+      youtube_url:
+        description: "YouTube URL (watch page or youtu.be)"
+        required: true
+        type: string
+
+permissions:
+  contents: write
+
+jobs:
+  youtube-zip-release:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install ffmpeg and Python dependencies
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends ffmpeg
+          python -m pip install --upgrade pip
+          pip install yt-dlp
+
+      - name: Download and zip video
+        id: download
+        env:
+          YOUTUBE_URL: ${{ github.event.inputs.youtube_url }}
+        run: |
+          python scripts/youtube_download.py "$YOUTUBE_URL"
+
+      - name: Generate release tag
+        run: echo "TAG=youtube-$(date -u +%Y%m%d%H%M%S)" >> "$GITHUB_ENV"
+
+      - name: Create release and upload zip
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ env.TAG }}
+          files: ${{ steps.download.outputs.file_path }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
