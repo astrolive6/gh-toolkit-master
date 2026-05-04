@@ -93,8 +93,9 @@ def main():
         "no_warnings": False,
     }
 
-    if shutil.which("deno"):
-        ydl_opts["js_runtimes"] = {"deno": None}
+    deno_path = shutil.which("deno")
+    if deno_path:
+        ydl_opts["js_runtimes"] = {"deno": {"path": deno_path}}
 
     cookie_path = cookies_path_from_env_or_args(args)
     if cookie_path is not None:
