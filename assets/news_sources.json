@@ -1,11 +1,14 @@
 [
   {
     "name": "Product Hunt",
-    "url": "https://www.producthunt.com/"
+    "url": "https://www.producthunt.com/",
+
   },
+
   {
     "name": "TLDR",
-    "url": "https://tldr.tech/"
+    "url": "https://tldr.tech/",
+
   },
   {
     "name": "Hacker News",
