@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       youtube_url:
-        description: "YouTube URL (watch page or youtu.be)"
+        description: "YouTube URL. If downloads fail with 'not a bot', add repo secret YOUTUBE_COOKIES_B64 (base64 of Netscape cookies.txt)."
         required: true
         type: string
 
@@ -24,12 +24,30 @@ jobs:
         with:
           python-version: "3.11"
 
+      - name: Set up Deno (yt-dlp EJS / YouTube player)
+        uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.x
+
       - name: Install ffmpeg and Python dependencies
         run: |
           sudo apt-get update -qq
           sudo apt-get install -y --no-install-recommends ffmpeg
           python -m pip install --upgrade pip
           pip install yt-dlp
+
+      - name: Decode YouTube cookies (optional)
+        env:
+          YOUTUBE_COOKIES_B64: ${{ secrets.YOUTUBE_COOKIES_B64 }}
+        run: |
+          if [ -n "$YOUTUBE_COOKIES_B64" ]; then
+            printf '%s' "$YOUTUBE_COOKIES_B64" | base64 -d > youtube_cookies.txt
+            test -s youtube_cookies.txt
+            echo "YOUTUBE_COOKIES_FILE=$PWD/youtube_cookies.txt" >> "$GITHUB_ENV"
+            echo "Using YOUTUBE_COOKIES_B64 for authenticated requests."
+          else
+            echo "No YOUTUBE_COOKIES_B64 secret; download may fail on bot checks."
+          fi
 
       - name: Download and zip video
         id: download

@@ -4,6 +4,7 @@ from __future__ import annotations
 import argparse
 import os
 import re
+import shutil
 import sys
 import zipfile
 from pathlib import Path
@@ -22,7 +23,20 @@ def parse_args():
     p = argparse.ArgumentParser(description="Download a YouTube video and zip it for release.")
     p.add_argument("youtube_url", help="YouTube watch or youtu.be URL")
     p.add_argument("--outdir", default="downloads/youtube", type=Path)
+    p.add_argument(
+        "--cookies",
+        type=Path,
+        metavar="FILE",
+        help="Netscape-format cookies file (often required in CI; export from a logged-in browser).",
+    )
     return p.parse_args()
+
+
+def cookies_path_from_env_or_args(args) -> Path | None:
+    if args.cookies:
+        return args.cookies
+    env = os.environ.get("YOUTUBE_COOKIES_FILE", "").strip()
+    return Path(env) if env else None
 
 
 def safe_zip_basename(title: str, video_id: str) -> str:
@@ -79,6 +93,16 @@ def main():
         "no_warnings": False,
     }
 
+    if shutil.which("deno"):
+        ydl_opts["js_runtimes"] = {"deno": None}
+
+    cookie_path = cookies_path_from_env_or_args(args)
+    if cookie_path is not None:
+        cookie_path = cookie_path.expanduser().resolve()
+        if not cookie_path.is_file():
+            raise YouTubeDownloadError(f"Cookies file not found: {cookie_path}")
+        ydl_opts["cookiefile"] = str(cookie_path)
+
     with yt_dlp.YoutubeDL(ydl_opts) as ydl:
         info = ydl.extract_info(args.youtube_url, download=True)
 
@@ -114,5 +138,15 @@ if __name__ == "__main__":
         print(f"\nError: {e}", file=sys.stderr)
         sys.exit(1)
     except yt_dlp.utils.DownloadError as e:
+        msg = str(e)
         print(f"\nDownload error: {e}", file=sys.stderr)
+        if "not a bot" in msg.lower() or "sign in" in msg.lower():
+            print(
+                "\nYouTube often blocks datacenter IPs. Add a Netscape cookies file:\n"
+                "  • Locally: pass --cookies /path/to/cookies.txt\n"
+                "  • GitHub Actions: create repo secret YOUTUBE_COOKIES_B64 (base64 of cookies.txt)\n"
+                "  Export cookies while logged into YouTube: "
+                "https://github.com/yt-dlp/yt-dlp/wiki/Extractors#exporting-youtube-cookies",
+                file=sys.stderr,
+            )
         sys.exit(1)
