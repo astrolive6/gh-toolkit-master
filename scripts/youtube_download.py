@@ -91,6 +91,12 @@ def main():
         "merge_output_format": "mp4",
         "quiet": False,
         "no_warnings": False,
+        "extractor_args": {
+            "youtube": {
+                "player_client": ["tv", "web"],
+            }
+        },
+        "remote_components": ["ejs:github"],
     }
 
     deno_path = shutil.which("deno")
