@@ -41,12 +41,15 @@ jobs:
           YOUTUBE_COOKIES_B64: ${{ secrets.YOUTUBE_COOKIES_B64 }}
         run: |
           if [ -n "$YOUTUBE_COOKIES_B64" ]; then
-            printf '%s' "$YOUTUBE_COOKIES_B64" | base64 -d > youtube_cookies.txt
-            test -s youtube_cookies.txt
-            echo "YOUTUBE_COOKIES_FILE=$PWD/youtube_cookies.txt" >> "$GITHUB_ENV"
-            echo "Using YOUTUBE_COOKIES_B64 for authenticated requests."
+            printf '%s' "$YOUTUBE_COOKIES_B64" | tr -d '\r\n ' | base64 -d > youtube_cookies.txt
+            if [ -s youtube_cookies.txt ]; then
+              echo "YOUTUBE_COOKIES_FILE=$PWD/youtube_cookies.txt" >> "$GITHUB_ENV"
+              echo "Cookies decoded successfully ($(wc -c < youtube_cookies.txt) bytes)."
+            else
+              echo "Warning: decoded cookies file is empty." >&2
+            fi
           else
-            echo "No YOUTUBE_COOKIES_B64 secret; download may fail on bot checks."
+            echo "No YOUTUBE_COOKIES_B64 secret found; download may fail on bot checks."
           fi
 
       - name: Download and zip video
