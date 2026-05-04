@@ -1,0 +1,50 @@
+[
+  {
+    "name": "Product Hunt",
+    "url": "https://www.producthunt.com/"
+  },
+  {
+    "name": "TLDR",
+    "url": "https://tldr.tech/"
+  },
+  {
+    "name": "Hacker News",
+    "url": "https://news.ycombinator.com/"
+  },
+  {
+    "name": "Polymarket",
+    "url": "https://polymarket.com/"
+  },
+  {
+    "name": "Kalshi",
+    "url": "https://kalshi.com/"
+  },
+  {
+    "name": "Perplexity Discover",
+    "url": "https://www.perplexity.ai/discover"
+  },
+  {
+    "name": "DEV Community",
+    "url": "https://dev.to/"
+  },
+   {
+    "name": "Laravel News",
+    "url": "https://laravel-news.com"
+  },
+  {
+    "name": "World Monitor",
+    "url": "https://worldmonitor.app/"
+  },
+  {
+    "name": "Iran Monitor (FA)",
+    "url": "https://www.iranmonitor.org/fa"
+  },
+  {
+    "name": "BBC World",
+    "rss": "http://feeds.bbci.co.uk/news/world/rss.xml"
+  },
+  {
+    "name": "Iran International (FA)",
+    "url": "https://www.iranintl.com/fa"
+  }
+]

@@ -1,0 +1,52 @@
+name: Daily News Collector
+
+on:
+  schedule:
+    - cron: "0 6 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  collect-news:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          python -m playwright install --with-deps chromium
+
+      - name: Collect news and screenshots
+        run: |
+          python scripts/daily_news.py --sources assets/news_sources.json --output artifacts
+
+      - name: Create release bundle
+        run: |
+          DATE_TAG=$(date -u +"%Y%m%d")
+          RELEASE_TAG="daily-news-${DATE_TAG}"
+          echo "RELEASE_TAG=${RELEASE_TAG}" >> "$GITHUB_ENV"
+          ARCHIVE_NAME="${RELEASE_TAG}.tar.gz"
+          tar -czf "$ARCHIVE_NAME" artifacts
+          echo "ARCHIVE_NAME=${ARCHIVE_NAME}" >> "$GITHUB_ENV"
+
+      - name: Publish GitHub release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ env.RELEASE_TAG }}
+          name: ${{ env.RELEASE_TAG }}
+          body: |
+            Automated daily news collection.
+            - Includes RSS summaries from configured sources.
+            - Includes webpage screenshots when available.
+          files: ${{ env.ARCHIVE_NAME }}

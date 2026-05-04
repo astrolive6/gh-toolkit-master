@@ -1,0 +1,47 @@
+name: Universal Downloader
+
+on:
+  workflow_dispatch:
+    inputs:
+      file_url:
+        description: "Source URL (direct link)"
+        required: true
+
+permissions:
+  contents: write
+
+jobs:
+  universal-download:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install Python dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install requests
+
+      - name: Download file
+        id: download
+        env:
+          INPUT_URL: ${{ github.event.inputs.file_url }}
+        run: |
+          python scripts/downloader.py "$INPUT_URL"
+
+      - name: Generate release tag
+        run: echo "TAG=downloader-$(date -u +%Y%m%d%H%M%S)" >> "$GITHUB_ENV"
+
+      - name: Create release and upload asset
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ env.TAG }}
+          files: ${{ steps.download.outputs.file_path }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
